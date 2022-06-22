@@ -39,6 +39,8 @@ void reverse(char s[], int len)
     int i, j;
     i = 0;
     j = len - 1;
+    if (s[j] == '\n')
+        --j;
     while (i < j) {
         tmp = s[i];
         s[i] = s[j];
