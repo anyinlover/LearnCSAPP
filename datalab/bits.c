@@ -143,7 +143,7 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return ~(~x | ~y);
+  return ~((~((~x) & y)) & (~(x & (~y))));
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -165,7 +165,7 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return !(~x ^ (x + 1)) & (x + 1);
+  return !((~(x ^ (x + 1))) | (!(x + 1)));
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -176,8 +176,8 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  int temp = 0xAA << 24 + 0xAA << 16 + 0xAA << 8 + 0xAA;
-  return !(temp & x ^ temp);
+  int temp = 0xAAAAAAAA;
+  return !((temp & x) ^ temp);
 }
 /* 
  * negate - return -x 
@@ -198,7 +198,7 @@ int negate(int x) {
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 15
  *   Rating: 3
- */
+ */0
 int isAsciiDigit(int x) {
   return !((x + ~0x30 + 1) >> 31) & !((~x + 0x39 + 1));
 }
@@ -279,7 +279,13 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  return 2;
+  unsigned s = uf >> 31;
+  unsigned e = uf >> 23 << 1;
+  unsigned f = uf << 9;
+  if (f && !(~e)) return uf;
+  if (!(~(e >> 1))) return (s << 31 + (e | 1) << 23);
+  if (!e) return (s << 31 + f << 1);
+  return (s << 31 + (e+1) << 23 + f);
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -294,7 +300,20 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+  unsigned s = uf >> 31;
+  unsigned e = uf >> 23 << 1;
+  unsigned f = uf << 9;
+  if (f && !(~e)) return 1 << 31;
+  if (!(e >> 7)) {
+    if (!(~(e << 1)))
+      if (s) return ~0;
+      else return 1;
+    else return 0;
+  }
+  if (e << 1 > 29) return 1 << 31;
+  unsigned r = f >> (e << 1 + 1);
+  if (s) return ~(r-1);
+  else return r;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -310,5 +329,8 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+  if (x > 127) return (1<<8-1) << 23;
+  if (x < -149) return 0;
+  if (x >= -126) return (x+127) << 23;
+  return 1 << (149+x);
 }
