@@ -1,0 +1,30 @@
+irmovq $0x200, %rsp
+irmovq ele1, %rdi
+call sum_list
+halt
+
+.align 8
+ele1:
+    .quad 0x00a
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0xc00
+    .quad 0
+
+sum_list:
+	xorq	%rax, %rax
+loop:
+    andq	%rdi, %rdi
+	je	return
+    mrmovq  (%rdi), %r10
+	addq	%r10, %rax
+	mrmovq	8(%rdi), %rdi
+	jmp	loop
+return:
+	ret
+
+main:
+

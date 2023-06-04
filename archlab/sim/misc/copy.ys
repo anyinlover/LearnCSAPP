@@ -1,0 +1,35 @@
+irmovq $0x200, %rsp
+irmovq src, %rdi
+irmovq dest, %rsi
+irmovq $3, %rdx
+call copy_block
+halt
+
+.align 8
+src:
+    .quad 0x00a
+    .quad 0x0b0
+    .quad 0xc00
+
+dest:
+    .quad 0x111
+    .quad 0x222
+    .quad 0x333
+
+copy_block:
+	xorq	%rcx, %rcx
+    irmovq  $1, %r10
+    irmovq  $8, %r11
+loop:
+	andq	%rdx, %rdx
+	jle	return
+	mrmovq	(%rdi), %rax
+	rmmovq	%rax, (%rsi)
+	xorq	%rax, %rcx
+	subq	%r10, %rdx
+	addq	%r11, %rsi
+	addq	%r11, %rdi
+	jmp	loop
+return:
+	rrmovq	%rcx, %rax
+	ret
